@@ -1,17 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AddTodoForm from "./components/AddTodo";
 import ListofTodos from "./components/ListOfTodos";
 import MainLayout from "./layout/MainLayout";
 
+const STORAGE_KEY = "todoapp.todos";
+
 const initialTodos = [
   {
     id: 12332,
-    text: "TODO-1",
+    text: "Buy groceries",
     completed: true,
   },
   {
     id: 23123,
-    text: "TODO-2",
+    text: "Finish React todo app",
     completed: false,
   },
 ];
@@ -23,55 +25,69 @@ const initialTodos = [
  */
 
 function App() {
-  const [todos, setTodos] = useState(initialTodos);
-  console.log("aa", import.meta.env.VITE_APP_API_URL);
-  const addTodo = (text) => {
-    /**
-     * TASK:1
-     * Add new todo item object to the todos array.
-     * Notice the format of the item in todos ie. each item in todos is
-     * an object containing text and completed key.
-     * Note: We cannot directly modify the "todos" variable use the setTodos callback
-     * Note: React will only apply updates sent through setTodos
-     */
-    const id = parseInt(Math.random() * 100000); // use this id
-    const completed = false; // initially completed will be false;
-    const newTodo = { text, id, completed };
-    console.log("Adding new todo", newTodo);
-    // Now update the todos List state to insert this newTodo
-    // Your code goes here
+  const [todos, setTodos] = useState(() => {
+    try {
+      const stored = window.localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {
+      // ignore and fall back to defaults
+    }
+    return initialTodos;
+  });
 
-    setTodos((prevTodos) => {
-      return [...prevTodos, newTodo]; // appends new todo and return new array
-    });
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+    } catch (e) {
+      // ignore write errors (e.g. storage full or disabled)
+    }
+  }, [todos]);
+
+  const addTodo = (rawText) => {
+    const text = rawText.trim();
+    if (!text) {
+      return;
+    }
+
+    const id = parseInt(Math.random() * 100000, 10);
+    const completed = false;
+    const newTodo = { text, id, completed };
+
+    setTodos((prevTodos) => [...prevTodos, newTodo]);
   };
 
   const markAsCompleted = (id) => {
-    /**
-     * TASK: 1
-     * Mark the particular todo with the given id as completed
-     * You need to find the todo with the given id and update the todos state
-     *
-     */
-    const todoToUpdate = todos.find((item) => item.id === id);
-    console.log("Updating todo", todoToUpdate.text);
-    // Your code goes here
     setTodos((prevTodos) =>
-      prevTodos.map((todo) => {
-        if (todo.id == id) {
-          console.log("Matching todo", todo);
-          return { ...todo, completed: true };
-        }
-        return todo;
-      })
+      prevTodos.map((todo) =>
+        todo.id === id ? { ...todo, completed: true } : todo
+      )
     );
   };
+
+  const deleteTodo = (id) => {
+    setTodos((prevTodos) => prevTodos.filter((todo) => todo.id !== id));
+  };
+
+  const total = todos.length;
+  const completedCount = todos.filter((todo) => todo.completed).length;
+  const remainingCount = total - completedCount;
 
   // NOTE: notice how the MainLayout component can take jsx as input using children prop ie. props.children
   return (
     <MainLayout>
-      <ListofTodos todos={todos} markAsCompleted={markAsCompleted} />
+      <ListofTodos
+        todos={todos}
+        markAsCompleted={markAsCompleted}
+        deleteTodo={deleteTodo}
+      />
       <AddTodoForm addTodo={addTodo} />
+      <div className="todo-stats">
+        <span>Total: {total}</span>
+        <span>Completed: {completedCount}</span>
+        <span>Remaining: {remainingCount}</span>
+      </div>
     </MainLayout>
   );
 }

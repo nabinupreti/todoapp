@@ -1,36 +1,46 @@
 import { useRef, useState } from "react";
 
 export const AddTodo = ({ addTodo }) => {
-  // Create todoText state using useState hook
   const [todoText, setTodoText] = useState("");
+  const [error, setError] = useState("");
 
-  // Create a ref object using useRef hook
   const inputRef = useRef(null);
 
-  // Function to focus the input using the ref
   const focusInput = () => {
-    // Directly access the DOM element and call focus method
-    inputRef.current.focus();
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
   };
 
-  //handle submit button click
-  function handleClick(event) {
+  const handleSubmit = (event) => {
     event.preventDefault();
-    focusInput(); // just for demo
-    addTodo(todoText);
-  }
+    const value = todoText.trim();
 
-  // get input element's value on change
+    if (!value) {
+      setError("Please enter a todo before submitting.");
+      focusInput();
+      return;
+    }
+
+    addTodo(value);
+    setTodoText("");
+    setError("");
+    focusInput();
+  };
+
   const handleChange = (event) => {
     const inputText = event.target.value;
-    console.log("event target", event.target);
     setTodoText(inputText);
+
+    if (error && inputText.trim()) {
+      setError("");
+    }
   };
-  console.log("Todo Text", todoText);
+
   return (
     <div className="todo-form">
       <h2>Add Todo</h2>
-      <form action="#">
+      <form onSubmit={handleSubmit}>
         <input
           ref={inputRef}
           placeholder="Add Todo Item"
@@ -38,10 +48,9 @@ export const AddTodo = ({ addTodo }) => {
           value={todoText}
           onChange={handleChange}
         />
-        <button type="button" onClick={handleClick}>
-          Submit Todo
-        </button>
+        <button type="submit">Submit Todo</button>
       </form>
+      {error ? <p className="todo-error">{error}</p> : null}
     </div>
   );
 };

@@ -1,34 +1,45 @@
 import React from "react";
 
 class TodoItem extends React.Component {
-  constructor(props) {
-    super(props);
-  }
-
   componentDidMount() {
     console.log("component mount", this.props.todo.text);
-    // fetch data, access browser apis
-    // not needed in this use case
   }
 
   componentWillUnmount() {
     console.log("component unmount", this.props.todo.text);
-    // do some cleanup before unmount
-    // not needed in this use case
   }
+
+  handleCompleteClick = () => {
+    const { todo, markAsCompleted } = this.props;
+    markAsCompleted(todo.id);
+  };
+
+  handleDeleteClick = () => {
+    const { todo, deleteTodo } = this.props;
+    deleteTodo(todo.id);
+  };
 
   render() {
     const todoItem = this.props.todo;
+    const isCompleted = todoItem.completed;
+
     return (
-      <div className={todoItem.completed ? "todo completed" : "todo"}>
+      <div className={isCompleted ? "todo completed" : "todo"}>
         <div className="todo-text">{todoItem.text}</div>
-        {!todoItem.completed ? (
-          <button onClick={() => this.props.markAsCompleted(todoItem.id)}>
+        {!isCompleted ? (
+          <button type="button" onClick={this.handleCompleteClick}>
             Mark as Completed
           </button>
         ) : (
           <i>Completed</i>
         )}
+        <button
+          type="button"
+          className="todo-delete"
+          onClick={this.handleDeleteClick}
+        >
+          Delete
+        </button>
       </div>
     );
   }
